@@ -1,14 +1,15 @@
-from flask import Flask, request, jsonify, session, make_response, render_template_string
+from flask import Flask, request, jsonify, session, render_template_string
+from flask import Flask, request, make_response
 import requests
 import base64
 import openai
 from io import BytesIO
-from PIL import Image
+from PIL import Image 
 import os
 
 app = Flask(__name__)
 # Ensure the OpenAI API key is loaded from environment variables
-openai.api_key = os.environ.get('OPENAI_API_KEY')
+app.secret_key = os.environ['OPENAI_API_KEY']
 
 # Define the fixed set of colors that can be used in the brush
 BRUSH_COLORS = {
@@ -99,7 +100,7 @@ def generate_reappraisal_text(description):
 
 
 def call_dalle_api(prompt, n=2):
-    api_key = openai.api_key
+    api_key = app.secret_key
     headers = {"Authorization": f"Bearer {api_key}"}
     payload = {"prompt": prompt, "n": n, "size": "512x512"}
 
