@@ -204,7 +204,7 @@ def home():
     return render_template_string("""
     <html>
         <head>
-            <title>Mind Palette for kids</title>
+            <title>Mind Palette for kids!</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
