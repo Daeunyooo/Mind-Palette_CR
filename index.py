@@ -80,19 +80,25 @@ def api_process_drawing():
         data = request.get_json()
         drawing_data = data['drawing']
         text_description = data['description']
-
-        # Generate image
-        image_urls = call_dalle_api(generate_prompt(text_description))
-
-        # Generate reappraisal text
-        reappraisal_text = generate_reappraisal_text(text_description)
-
-        if image_urls:
-            return jsonify({'image_urls': image_urls, 'reappraisal_text': reappraisal_text})
-        else:
-            return jsonify({'error': 'Failed to generate images'}), 500
+        
+        # Decode image from base64 (if used)
+        image_data = base64.b64decode(drawing_data.split(',')[1])
+        image = Image.open(BytesIO(image_data)).convert('RGBA')
+        
+        # Extract used colors (if applicable)
+        raw_colors = {(r, g, b) for r, g, b, a in image.getdata() if a > 0}
+        raw_colors_hex = {f"#{r:02x}{g:02x}{b:02x}" for r, g, b in raw_colors}
+        used_colors_names = [BRUSH_COLORS[hex_color] for hex_color in raw_colors_hex if hex_color in BRUSH_COLORS]
+        
+        # Generate the prompt based on the colors and description
+        prompt = generate_prompt(text_description, used_colors_names)
+        
+        # Call the DALL-E API to generate the image
+        image_urls = call_dalle_api(prompt, n=2)
+        
+        return jsonify({'image_urls': image_urls})
     except Exception as e:
-        print(f"Error processing drawing: {str(e)}")  # Log the exception
+        print(f"Error processing drawing: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
 
@@ -134,11 +140,21 @@ def generate_reappraisal_text(description):
 def call_dalle_api(prompt, n=2):
     api_key = app.secret_key
     headers = {"Authorization": f"Bearer {api_key}"}
-    payload = {"prompt": prompt, "n": n, "size": "512x512"}
-    response = requests.post("https://api.openai.com/v1/images/generations", json=payload, headers=headers)
+    payload = {
+        "prompt": prompt,
+        "n": n,
+        "size": "512x512"
+    }
+    response = requests.post(
+        "https://api.openai.com/v1/images/generations",
+        json=payload,
+        headers=headers
+    )
     if response.status_code == 200:
-        images = response.json()['data']
+        images = response.json().get('data', [])
         return [image['url'] for image in images]
+    else:
+        print(f"Error from OpenAI API: {response.status_code}, {response.text}")
     return []
 
 
