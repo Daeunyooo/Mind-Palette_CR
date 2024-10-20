@@ -50,12 +50,16 @@ def api_process_drawing():
 
         # Generate prompt using colors and description
         prompt = generate_prompt(text_description, used_colors_names)
+        print(f"Generated prompt for DALL-E: {prompt}")
 
         # Generate image using the DALL-E API
         image_urls = call_dalle_api(prompt, n=2)
+        if not image_urls:
+            raise ValueError("Failed to generate images")
 
         # Generate reappraisal advice text
         reappraisal_text = generate_reappraisal_text(text_description)
+        print(f"Generated reappraisal text: {reappraisal_text}")
 
         return jsonify({'image_urls': image_urls, 'reappraisal_text': reappraisal_text})
     except Exception as e:
@@ -98,8 +102,9 @@ def generate_reappraisal_text(description):
 
 def call_dalle_api(prompt, n=2):
     api_key = app.secret_key
-    headers = {"Authorization": f"Bearer {api_key}"}
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {"prompt": prompt, "n": n, "size": "512x512"}
+
     try:
         response = requests.post(
             "https://api.openai.com/v1/images/generations",
@@ -108,6 +113,8 @@ def call_dalle_api(prompt, n=2):
         )
         response.raise_for_status()
         images = response.json().get('data', [])
+        if not images:
+            print("No images returned from DALL-E.")
         return [image['url'] for image in images]
     except requests.exceptions.RequestException as e:
         print(f"Error from OpenAI API: {e}")
