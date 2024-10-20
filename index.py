@@ -207,7 +207,7 @@ def home():
     return render_template_string("""
     <html>
         <head>
-            <title>[Mind Palette for kids]</title>
+            <title>*Mind Palette for kids*</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
@@ -435,7 +435,7 @@ def home():
         <body>
             <div class="container">
                 <div class="left">
-                <h1>[Mind Palette for kids]</h1>
+                <h1>*Mind Palette for kids*</h1>
                 <div id="question">{{ latest_question }}</div>
                 <progress value="{{ progress_value }}" max="100"></progress>  <!-- Progress bar here -->
                 <form onsubmit="return sendResponse();">
