@@ -1,27 +1,13 @@
-# for kids
-from flask import Flask, request, jsonify, session, render_template_string
-from flask import Flask, request, make_response
+from flask import Flask, request, jsonify, session, make_response, render_template_string
 import requests
 import base64
 import openai
 from io import BytesIO
-from PIL import Image 
+from PIL import Image
 import os
 
 app = Flask(__name__)
-
 app.secret_key = os.environ['OPENAI_API_KEY']
-
-
-@app.route('/proxy')
-def proxy_image():
-    image_url = request.args.get('url')
-    response = requests.get(image_url)
-    proxy_response = make_response(response.content)
-    proxy_response.headers['Content-Type'] = 'image/jpeg'  # Adjust based on the image type
-    proxy_response.headers['Access-Control-Allow-Origin'] = '*'
-    return proxy_response
-
 
 # Define the fixed set of colors that can be used in the brush
 BRUSH_COLORS = {
@@ -37,42 +23,14 @@ BRUSH_COLORS = {
     '#000000': 'black'
 }
 
-@app.route('/api/question', methods=['POST'])
-def api_question():
-    data = request.json
-    user_response = data['response']
-    session['history'].append(('You', user_response))
-
-    if session.get('question_number', 1) <= 6:
-        question_text = generate_art_therapy_question(app.secret_key, session['question_number'], session['history'])
-        session['history'].append(('Therapist', question_text))
-        # Increment the question number first before calculating progress
-        session['question_number'] += 1
-        # Calculate progress based on the current question number (e.g., at question 1, progress should show 16.67%)
-        progress = (session['question_number'] - 1) / 6 * 100
-        return jsonify({'question': question_text, 'progress': progress, 'restart': False})
-    else:
-        # Resetting the session and starting from the first question
-        session.clear()
-        session['history'] = []
-        session['question_number'] = 1
-        first_question_text = generate_art_therapy_question(app.secret_key, session['question_number'], session['history'])
-        session['history'].append(('Therapist', first_question_text))
-        return jsonify({'question': first_question_text, 'progress': 0, 'restart': True})
-
-
-
-
-@app.route('/api/generate-image', methods=['POST'])
-def api_generate_image():
-    data = request.json
-    description = data['description']
-    image_urls = call_dalle_api(generate_prompt(description))
-    if image_urls:
-        return jsonify({'image_urls': image_urls})
-    else:
-        return jsonify({'error': 'Failed to generate images'}), 500
-
+@app.route('/proxy')
+def proxy_image():
+    image_url = request.args.get('url')
+    response = requests.get(image_url)
+    proxy_response = make_response(response.content)
+    proxy_response.headers['Content-Type'] = 'image/jpeg'
+    proxy_response.headers['Access-Control-Allow-Origin'] = '*'
+    return proxy_response
 
 @app.route('/api/process-drawing', methods=['POST'])
 def api_process_drawing():
@@ -80,22 +38,22 @@ def api_process_drawing():
         data = request.get_json()
         drawing_data = data['drawing']
         text_description = data['description']
-        
-        # Decode image from base64 (if used)
+
+        # Decode image from base64
         image_data = base64.b64decode(drawing_data.split(',')[1])
         image = Image.open(BytesIO(image_data)).convert('RGBA')
-        
-        # Extract used colors (if applicable)
+
+        # Extract colors used in the drawing
         raw_colors = {(r, g, b) for r, g, b, a in image.getdata() if a > 0}
         raw_colors_hex = {f"#{r:02x}{g:02x}{b:02x}" for r, g, b in raw_colors}
         used_colors_names = [BRUSH_COLORS[hex_color] for hex_color in raw_colors_hex if hex_color in BRUSH_COLORS]
-        
-        # Generate the prompt based on the colors and description
+
+        # Generate prompt using colors and description
         prompt = generate_prompt(text_description, used_colors_names)
-        
-        # Call the DALL-E API to generate the image
+
+        # Generate image using the DALL-E API
         image_urls = call_dalle_api(prompt, n=2)
-        
+
         return jsonify({'image_urls': image_urls})
     except Exception as e:
         print(f"Error processing drawing: {str(e)}")
@@ -103,18 +61,22 @@ def api_process_drawing():
 
 
 def generate_prompt(description, colors=None):
-    # Refine the prompt with more explicit instructions to ensure no text or numbers are included
     if colors:
         color_description = ', '.join(colors)
-        prompt = (f"Create a purely visual artistic oil painting drawing using the colors {color_description}, "
-                  f"that reimagines '{description}' in a positive manner. For instance, transforming a gloomy cloud "
-                  f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
-                  f"letters, or numbers.")
+        prompt = (
+            f"Create a purely visual artistic drawing using the colors {color_description}, "
+            f"that reimagines '{description}' in a positive manner. For example, transforming a gloomy cloud "
+            f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
+            f"letters, or numbers."
+        )
     else:
-        prompt = (f"Create a purely visual artistic oil painting drawing that reimagines '{description}' in a positive manner. "
-                  f"For instance, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
-                  f"on visual elements without any text, letters, or numbers.")
+        prompt = (
+            f"Create a purely visual artistic drawing that reimagines '{description}' in a positive manner. "
+            f"For example, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
+            f"on visual elements without any text, letters, or numbers."
+        )
     return prompt
+    
 
 #Added
 def generate_reappraisal_text(description):
@@ -140,22 +102,20 @@ def generate_reappraisal_text(description):
 def call_dalle_api(prompt, n=2):
     api_key = app.secret_key
     headers = {"Authorization": f"Bearer {api_key}"}
-    payload = {
-        "prompt": prompt,
-        "n": n,
-        "size": "512x512"
-    }
-    response = requests.post(
-        "https://api.openai.com/v1/images/generations",
-        json=payload,
-        headers=headers
-    )
-    if response.status_code == 200:
+    payload = {"prompt": prompt, "n": n, "size": "512x512"}
+
+    try:
+        response = requests.post(
+            "https://api.openai.com/v1/images/generations",
+            json=payload,
+            headers=headers
+        )
+        response.raise_for_status()
         images = response.json().get('data', [])
         return [image['url'] for image in images]
-    else:
-        print(f"Error from OpenAI API: {response.status_code}, {response.text}")
-    return []
+    except requests.exceptions.RequestException as e:
+        print(f"Error from OpenAI API: {e}")
+        return []
 
 
 
@@ -205,22 +165,47 @@ def generate_art_therapy_question(api_key, question_number, session_history):
 
 
 
+@app.route('/api/question', methods=['POST'])
+def api_question():
+    data = request.json
+    user_response = data['response']
+    session['history'].append(('You', user_response))
+
+    if session.get('question_number', 1) <= 6:
+        question_text = generate_art_therapy_question(
+            app.secret_key, session['question_number'], session['history']
+        )
+        session['history'].append(('Therapist', question_text))
+        session['question_number'] += 1
+        progress = (session['question_number'] - 1) / 6 * 100
+        return jsonify({'question': question_text, 'progress': progress, 'restart': False})
+    else:
+        session.clear()
+        session['history'] = []
+        session['question_number'] = 1
+        first_question_text = generate_art_therapy_question(
+            app.secret_key, session['question_number'], session['history']
+        )
+        session['history'].append(('Therapist', first_question_text))
+        return jsonify({'question': first_question_text, 'progress': 0, 'restart': True})
+
 @app.route('/', methods=['GET'])
 def home():
     if 'history' not in session or 'question_number' not in session:
         session['history'] = []
         session['question_number'] = 1
-        initial_question = generate_art_therapy_question(app.secret_key, session['question_number'], session['history'])
+        initial_question = generate_art_therapy_question(
+            app.secret_key, session['question_number'], session['history']
+        )
         session['history'].append(('Therapist', initial_question))
         session['question_number'] += 1
 
     latest_question = session['history'][-1][1]
-    # Adjust progress calculation to reflect the current question number instead of completion
     progress_value = (session['question_number']) / 6 * 100
     return render_template_string("""
     <html>
         <head>
-            <title>Mind Palette for kids!</title>
+            <title>Mind Palette for kids*</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
@@ -448,7 +433,7 @@ def home():
         <body>
             <div class="container">
                 <div class="left">
-                <h1>Mind Palette for kids!</h1>
+                <h1>Mind Palette for kids*</h1>
                 <div id="question">{{ latest_question }}</div>
                 <progress value="{{ progress_value }}" max="100"></progress>  <!-- Progress bar here -->
                 <form onsubmit="return sendResponse();">
