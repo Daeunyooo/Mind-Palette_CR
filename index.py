@@ -48,17 +48,13 @@ def api_process_drawing():
         raw_colors_hex = {f"#{r:02x}{g:02x}{b:02x}" for r, g, b in raw_colors}
         used_colors_names = [BRUSH_COLORS[hex_color] for hex_color in raw_colors_hex if hex_color in BRUSH_COLORS]
 
-        # Generate prompt using the colors and description
+        # Generate prompt using colors and description
         prompt = generate_prompt(text_description, used_colors_names)
 
-        # Generate image using the DALL-E API with the generated prompt
+        # Generate image using the DALL-E API
         image_urls = call_dalle_api(prompt, n=2)
 
-        # Generate reappraisal text
-        reappraisal_text = generate_reappraisal_text(text_description)
-
-        # Return the image URLs and the reappraisal text
-        return jsonify({'image_urls': image_urls, 'reappraisal_text': reappraisal_text})
+        return jsonify({'image_urls': image_urls})
     except Exception as e:
         print(f"Error processing drawing: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -80,9 +76,9 @@ def generate_prompt(description, colors=None):
             f"on visual elements without any text, letters, or numbers."
         )
     return prompt
-
     
 
+#Added
 def generate_reappraisal_text(description):
     try:
         # Ensure the API key is set
@@ -90,7 +86,7 @@ def generate_reappraisal_text(description):
 
         # Generate the reappraisal text
         response = openai.Completion.create(
-            engine="gpt-3.5-turbo",
+            engine="gpt-3.5-turbo-instruct",
             prompt=f"Generate a positive cognitive reappraisal advice for a child's description: {description}",
             max_tokens=80
         )
@@ -101,7 +97,6 @@ def generate_reappraisal_text(description):
     except Exception as e:
         print(f"Error generating reappraisal text: {str(e)}")
         return "Could not generate reappraisal text."
-
 
 
 def call_dalle_api(prompt, n=2):
@@ -210,7 +205,7 @@ def home():
     return render_template_string("""
     <html>
         <head>
-            <title>*Mind Palette for kids*</title>
+            <title>Mind Palette for kids*</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
@@ -374,13 +369,13 @@ def home():
 
                 function generateImage(event) {
                     event.preventDefault();  // Prevent the form from submitting traditionally
-                
+
                     const canvas = document.getElementById('drawingCanvas');
                     const image_data = canvas.toDataURL('image/png');
                     const description = document.getElementById('description').value;
-                
+
                     document.getElementById('loading').style.display = 'block'; // Show loading indicator
-                
+
                     fetch('/api/process-drawing', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -388,29 +383,28 @@ def home():
                     })
                     .then(res => res.json())
                     .then(data => {
-                        // Display images
                         const imagesContainer = document.getElementById('images');
-                        imagesContainer.innerHTML = ''; // Clear previous images
                         data.image_urls.forEach(url => {
                             const img = new Image();
                             img.onload = function() {
-                                imagesContainer.insertBefore(img, imagesContainer.firstChild);
+                                imagesContainer.insertBefore(img, imagesContainer.firstChild); // Insert new images at the top
                             };
-                            img.src = '/proxy?url=' + encodeURIComponent(url);
+                            img.onclick = function() { replaceCanvas(this.src); }; // use this.src, which is the correct reference
+                            img.src = '/proxy?url=' + encodeURIComponent(url); // use url from the forEach loop
                             img.width = 256;
                             img.height = 256;
                         });
-                
-                        // Display reappraisal text separately
+                        
+                        // Display reappraisal text
                         document.getElementById('reappraisalText').textContent = data.reappraisal_text;
-                
                         document.getElementById('loading').style.display = 'none'; // Hide loading indicator
                     })
+
                     .catch(error => {
                         console.error('Error:', error);
                         document.getElementById('loading').style.display = 'none'; // Hide loading indicator if there is an error
                     });
-                
+
                     return false;
                 }
 
@@ -439,7 +433,7 @@ def home():
         <body>
             <div class="container">
                 <div class="left">
-                <h1>*Mind Palette for kids*</h1>
+                <h1>Mind Palette for kids*</h1>
                 <div id="question">{{ latest_question }}</div>
                 <progress value="{{ progress_value }}" max="100"></progress>  <!-- Progress bar here -->
                 <form onsubmit="return sendResponse();">
@@ -619,10 +613,11 @@ def home():
                     </div>
                 </div>
 
+
         </body>
     </html>
     """, latest_question=latest_question, progress_value=progress_value)
 
 if __name__ == '__main__':
     app.secret_key = os.environ['OPENAI_API_KEY']
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))        
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))  
