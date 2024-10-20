@@ -1,4 +1,3 @@
-
 from flask import Flask, request, jsonify, session, make_response, render_template_string
 import requests
 import base64
@@ -8,7 +7,8 @@ from PIL import Image
 import os
 
 app = Flask(__name__)
-app.secret_key = os.environ['OPENAI_API_KEY']
+# Ensure the OpenAI API key is loaded from environment variables
+openai.api_key = os.environ.get('OPENAI_API_KEY')
 
 # Define the fixed set of colors that can be used in the brush
 BRUSH_COLORS = {
@@ -55,7 +55,10 @@ def api_process_drawing():
         # Generate image using the DALL-E API
         image_urls = call_dalle_api(prompt, n=2)
 
-        return jsonify({'image_urls': image_urls})
+        # Generate reappraisal advice text
+        reappraisal_text = generate_reappraisal_text(text_description)
+
+        return jsonify({'image_urls': image_urls, 'reappraisal_text': reappraisal_text})
     except Exception as e:
         print(f"Error processing drawing: {str(e)}")
         return jsonify({'error': str(e)}), 500
@@ -79,13 +82,8 @@ def generate_prompt(description, colors=None):
     return prompt
     
 
-#Added
 def generate_reappraisal_text(description):
     try:
-        # Ensure the API key is set
-        openai.api_key = app.secret_key
-
-        # Generate the reappraisal text
         response = openai.Completion.create(
             engine="gpt-3.5-turbo-instruct",
             prompt=f"Generate a positive cognitive reappraisal advice for a child's description: {description}",
@@ -101,7 +99,7 @@ def generate_reappraisal_text(description):
 
 
 def call_dalle_api(prompt, n=2):
-    api_key = app.secret_key
+    api_key = openai.api_key
     headers = {"Authorization": f"Bearer {api_key}"}
     payload = {"prompt": prompt, "n": n, "size": "512x512"}
 
@@ -206,7 +204,7 @@ def home():
     return render_template_string("""
     <html>
         <head>
-            <title>*Mind Palette for kids*</title>
+            <title>[Mind Palette for kids]</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
@@ -434,7 +432,7 @@ def home():
         <body>
             <div class="container">
                 <div class="left">
-                <h1>*Mind Palette for kids*</h1>
+                <h1>[Mind Palette for kids]</h1>
                 <div id="question">{{ latest_question }}</div>
                 <progress value="{{ progress_value }}" max="100"></progress>  <!-- Progress bar here -->
                 <form onsubmit="return sendResponse();">
