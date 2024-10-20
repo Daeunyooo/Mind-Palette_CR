@@ -1,15 +1,13 @@
-from flask import Flask, request, jsonify, session, render_template_string
-from flask import Flask, request, make_response
+from flask import Flask, request, jsonify, make_response, render_template_string, session
 import requests
 import base64
 import openai
 from io import BytesIO
-from PIL import Image 
+from PIL import Image
 import os
 
 app = Flask(__name__)
-# Ensure the OpenAI API key is loaded from environment variables
-app.secret_key = os.environ['OPENAI_API_KEY']
+app.secret_key = os.environ.get('OPENAI_API_KEY')
 
 # Define the fixed set of colors that can be used in the brush
 BRUSH_COLORS = {
@@ -81,7 +79,6 @@ def generate_prompt(description, colors=None):
             f"on visual elements without any text, letters, or numbers."
         )
     return prompt
-    
 
 def generate_reappraisal_text(description):
     try:
@@ -103,7 +100,6 @@ def call_dalle_api(prompt, n=2):
     api_key = app.secret_key
     headers = {"Authorization": f"Bearer {api_key}"}
     payload = {"prompt": prompt, "n": n, "size": "512x512"}
-
     try:
         response = requests.post(
             "https://api.openai.com/v1/images/generations",
@@ -118,7 +114,6 @@ def call_dalle_api(prompt, n=2):
         return []
 
 
-
 predefined_sentences = {
     4: "Let's draw. Please use 'Visual Metaphor' on the right.",
     5: "Let's draw. Please use 'Visual Metaphor' on the right.",
@@ -129,14 +124,14 @@ predefined_sentences = {
 def generate_art_therapy_question(api_key, question_number, session_history):
     openai.api_key = api_key
     question_prompts = [
-        "Generate a question to ask user (children) about their current emotion. Do not use 'kiddo'",
+        "Generate a question to ask user (children) about their current emotion. Do not use 'kiddo'.",
         "Based on the previous responses, generate a short question for identifying and describing the emotion, such as asking about the intensity of the emotion or where in the body it is felt the most. Users are kids, so please use easy and friendly expressions.",
         "Based on the previous responses, generate a short question that explores the context, such as asking what triggered this emotion or describing the situation or thought that led to these feelings. Users are kids, so please use easy and friendly expressions.",
         "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotion as an 'abstract shape or symbol' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
         "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotions as a 'texture' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
         "Based on the previous responses, generate a short, easy-to-understand summary for kids. Use friendly language that reflects the emotions they expressed. Then, provide personalized advice to help them reappraise their emotions or practice cognitive defusion, incorporating a playful and engaging approach consistent with ACT theory. Make sure the advice is directly relevant to the emotions and thoughts shared by the child, using examples or activities that are fun and easy for kids to understand. Also, make this less than three sentences."
     ]
-
+    
     user_responses = " ".join([resp for who, resp in session_history if who == 'You'])
     context = f"Based on the user's previous responses: {user_responses}"
 
@@ -147,12 +142,10 @@ def generate_art_therapy_question(api_key, question_number, session_history):
             prompt=prompt_text,
             max_tokens=150,
             n=1,
-            stop=None,
             temperature=0.7
         )
         question_text = response.choices[0].text.strip()
 
-        # Adjust here to include the question number before predefined sentences
         if question_number in predefined_sentences:
             full_question_text = f"Question {question_number}: {predefined_sentences[question_number]} {question_text}"
         else:
@@ -168,10 +161,12 @@ def generate_art_therapy_question(api_key, question_number, session_history):
 @app.route('/api/question', methods=['POST'])
 def api_question():
     data = request.json
-    user_response = data['response']
+    user_response = data.get('response', '')
+    session['history'] = session.get('history', [])
+    session['question_number'] = session.get('question_number', 1)
     session['history'].append(('You', user_response))
 
-    if session.get('question_number', 1) <= 6:
+    if session['question_number'] <= 6:
         question_text = generate_art_therapy_question(
             app.secret_key, session['question_number'], session['history']
         )
@@ -188,20 +183,20 @@ def api_question():
         )
         session['history'].append(('Therapist', first_question_text))
         return jsonify({'question': first_question_text, 'progress': 0, 'restart': True})
+        
 
 @app.route('/', methods=['GET'])
 def home():
-    if 'history' not in session or 'question_number' not in session:
-        session['history'] = []
-        session['question_number'] = 1
-        initial_question = generate_art_therapy_question(
-            app.secret_key, session['question_number'], session['history']
-        )
-        session['history'].append(('Therapist', initial_question))
-        session['question_number'] += 1
+    session['history'] = session.get('history', [])
+    session['question_number'] = session.get('question_number', 1)
+    initial_question = generate_art_therapy_question(
+        app.secret_key, session['question_number'], session['history']
+    )
+    session['history'].append(('Therapist', initial_question))
+    session['question_number'] += 1
 
     latest_question = session['history'][-1][1]
-    progress_value = (session['question_number']) / 6 * 100
+    progress_value = (session['question_number'] - 1) / 6 * 100
     return render_template_string("""
     <html>
         <head>
@@ -619,5 +614,4 @@ def home():
     """, latest_question=latest_question, progress_value=progress_value)
 
 if __name__ == '__main__':
-    app.secret_key = os.environ['OPENAI_API_KEY']
-    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))  
+    app.run(host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
