@@ -70,18 +70,14 @@ def api_process_drawing():
 def generate_prompt(description, colors=None):
     if colors:
         color_description = ', '.join(colors)
-        prompt = (
-            f"Create a purely visual artistic drawing using the colors {color_description}, "
-            f"that reimagines '{description}' in a positive manner. For example, transforming a gloomy cloud "
-            f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
-            f"letters, or numbers."
-        )
+        prompt = (f"Create a purely visual artistic oil painting drawing using the colors {color_description}, "
+                  f"that reimagines '{description}' in a positive manner. For instance, transforming a gloomy cloud "
+                  f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
+                  f"letters, or numbers.")
     else:
-        prompt = (
-            f"Create a purely visual artistic drawing that reimagines '{description}' in a positive manner. "
-            f"For example, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
-            f"on visual elements without any text, letters, or numbers."
-        )
+        prompt = (f"Create a purely visual artistic oil painting drawing that reimagines '{description}' in a positive manner. "
+                  f"For instance, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
+                  f"on visual elements without any text, letters, or numbers.")
     return prompt
 
 def generate_reappraisal_text(description):
