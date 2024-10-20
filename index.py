@@ -114,7 +114,7 @@ def generate_prompt(description, colors=None):
 def generate_reappraisal_text(description):
     try:
         # Ensure the API key is set
-        openai.api_key = api_key
+        openai.api_key = app.secret_key
 
         # Generate the reappraisal text
         response = openai.Completion.create(
