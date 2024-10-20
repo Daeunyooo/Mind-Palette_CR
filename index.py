@@ -114,13 +114,13 @@ def generate_prompt(description, colors=None):
 def generate_reappraisal_text(description):
     try:
         # Ensure the API key is set
-        openai.api_key = app.secret_key
+        openai.api_key = api_key
 
         # Generate the reappraisal text
         response = openai.Completion.create(
             engine="gpt-3.5-turbo-instruct",
             prompt=f"Generate a positive cognitive reappraisal advice for a child's description: {description}",
-            max_tokens=100
+            max_tokens=80
         )
         if 'choices' in response and len(response.choices) > 0:
             return response.choices[0].text.strip()
