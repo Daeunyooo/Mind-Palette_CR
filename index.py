@@ -80,25 +80,55 @@ def api_process_drawing():
         data = request.get_json()
         drawing_data = data['drawing']
         text_description = data['description']
-        image_data = base64.b64decode(drawing_data.split(',')[1])
-        image = Image.open(BytesIO(image_data)).convert('RGBA')
-        raw_colors = {(r, g, b) for r, g, b, a in image.getdata() if a > 0}
-        raw_colors_hex = {f"#{r:02x}{g:02x}{b:02x}" for r, g, b in raw_colors}
-        used_colors_names = [BRUSH_COLORS[hex_color] for hex_color in raw_colors_hex if hex_color in BRUSH_COLORS]
-        prompt = generate_prompt(text_description, used_colors_names)
-        image_urls = call_dalle_api(prompt, n=2)
-        return jsonify({'image_urls': image_urls})
+
+        # Generate image
+        image_urls = call_dalle_api(generate_prompt(text_description))
+
+        # Generate reappraisal text
+        reappraisal_text = generate_reappraisal_text(text_description)
+
+        if image_urls:
+            return jsonify({'image_urls': image_urls, 'reappraisal_text': reappraisal_text})
+        else:
+            return jsonify({'error': 'Failed to generate images'}), 500
     except Exception as e:
+        print(f"Error processing drawing: {str(e)}")  # Log the exception
         return jsonify({'error': str(e)}), 500
 
 
 def generate_prompt(description, colors=None):
+    # Refine the prompt with more explicit instructions to ensure no text or numbers are included
     if colors:
         color_description = ', '.join(colors)
-        prompt = f"Create two abstract drawings that look like they were made by children using the colors {color_description} and inspired by the theme '{description}'."
+        prompt = (f"Create a purely visual artistic oil painting drawing using the colors {color_description}, "
+                  f"that reimagines '{description}' in a positive manner. For instance, transforming a gloomy cloud "
+                  f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
+                  f"letters, or numbers.")
     else:
-        prompt = f"Create two abstract drawings that look like they were made by children inspired by the theme '{description}'."
+        prompt = (f"Create a purely visual artistic oil painting drawing that reimagines '{description}' in a positive manner. "
+                  f"For instance, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
+                  f"on visual elements without any text, letters, or numbers.")
     return prompt
+
+#Added
+def generate_reappraisal_text(description):
+    try:
+        # Ensure the API key is set
+        openai.api_key = app.secret_key
+
+        # Generate the reappraisal text
+        response = openai.Completion.create(
+            engine="gpt-3.5-turbo-instruct",
+            prompt=f"Generate a positive cognitive reappraisal advice for a child's description: {description}",
+            max_tokens=100
+        )
+        if 'choices' in response and len(response.choices) > 0:
+            return response.choices[0].text.strip()
+        else:
+            return "Failed to generate meaningful output. Please refine the prompt."
+    except Exception as e:
+        print(f"Error generating reappraisal text: {str(e)}")
+        return "Could not generate reappraisal text."
 
 
 def call_dalle_api(prompt, n=2):
@@ -174,7 +204,7 @@ def home():
     return render_template_string("""
     <html>
         <head>
-            <title>Mind Palette!</title>
+            <title>Mind Palette for kids</title>
             <style>
                 body {
                     font-family: 'Helvetica', sans-serif;
@@ -363,8 +393,10 @@ def home():
                             img.width = 256;
                             img.height = 256;
                         });
-                        document.getElementById('loading').style.display = 'none'; // Hide loading indicator after images are processed
-                        document.getElementById('description').value = ''; // Clear the description input box after submitting
+                        
+                        // Display reappraisal text
+                        document.getElementById('reappraisalText').textContent = data.reappraisal_text;
+                        document.getElementById('loading').style.display = 'none'; // Hide loading indicator
                     })
 
                     .catch(error => {
@@ -386,7 +418,7 @@ def home():
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     };
                     img.onerror = function() {
-                        alert('Failed to load image with CORS policy.');
+                        alert('What do you think about this image?');
                     };
                     img.src = '/proxy?url=' + encodeURIComponent(imgSrc);
 
@@ -400,7 +432,7 @@ def home():
         <body>
             <div class="container">
                 <div class="left">
-                <h1>Mind Palette!</h1>
+                <h1>Mind Palette for kids</h1>
                 <div id="question">{{ latest_question }}</div>
                 <progress value="{{ progress_value }}" max="100"></progress>  <!-- Progress bar here -->
                 <form onsubmit="return sendResponse();">
@@ -574,6 +606,9 @@ def home():
                     </div>
                     <div id="images">
                         <!-- Dynamically added images will go here -->
+                    </div>
+                    <div id="reappraisalText" style="padding: 20px; font-size: 16px; color: #333;">
+                        <!-- Reappraisal text will appear here -->
                     </div>
                 </div>
 
