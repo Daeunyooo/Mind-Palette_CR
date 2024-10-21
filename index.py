@@ -70,14 +70,18 @@ def api_process_drawing():
 def generate_prompt(description, colors=None):
     if colors:
         color_description = ', '.join(colors)
-        prompt = (f"Create a purely visual artistic oil painting drawing using the colors {color_description}, "
-                  f"that reimagines '{description}' in a positive manner. For instance, transforming a gloomy cloud "
-                  f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
-                  f"letters, or numbers.")
+        prompt = (
+            f"Create a purely visual artistic oil painting drawing using the colors {color_description}, "
+            f"that reimagines '{description}' in a positive manner. For example, transforming a gloomy cloud "
+            f"into a scene with a rainbow. The image must focus entirely on visual elements without any text, "
+            f"letters, or numbers."
+        )
     else:
-        prompt = (f"Create a purely visual artistic oil painting drawing that reimagines '{description}' in a positive manner. "
-                  f"For instance, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
-                  f"on visual elements without any text, letters, or numbers.")
+        prompt = (
+            f"Create a purely visual artistic oil painting drawing that reimagines '{description}' in a positive manner. "
+            f"For example, transforming a gloomy cloud into a scene with a rainbow. The image must focus entirely "
+            f"on visual elements without any text, letters, or numbers."
+        )
     return prompt
 
 def generate_reappraisal_text(description):
@@ -118,7 +122,8 @@ def call_dalle_api(prompt, n=2):
 
 
 predefined_sentences = {
-    4: "Let's use the 'Visual Metaphor' on the right to make changes to your drawing!",
+    4: "Let's draw. Please use 'Visual Metaphor' on the right.",
+    5: "Let's draw. Please use 'Visual Metaphor' on the right.",
     6: "Thank you for participating in the session. You can restart the session if you want to explore more."
 }
 
@@ -126,16 +131,12 @@ predefined_sentences = {
 def generate_art_therapy_question(api_key, question_number, session_history):
     openai.api_key = api_key
     question_prompts = [
-        # Q1. Identification
-        "Generate a short question to ask the child about their current emotions and draw it on the canvas. Follow up with questions like: 'What symbol or shape would represent your feeling?' or 'What kind of texture does your feeling have (e.g., rough, smooth, soft)?' Use friendly and simple language to help kids articulate their experiences.",
-        # Q2. Situation Selection & Modification
+        "Generate a question to ask user (children) about their current emotion. Do not use 'kiddo'.",
+        "Based on the previous responses, generate a short question for identifying and describing the emotion, such as asking about the intensity of the emotion or where in the body it is felt the most. Users are kids, so please use easy and friendly expressions.",
         "Based on the previous responses, generate a short question that explores the context, such as asking what triggered this emotion or describing the situation or thought that led to these feelings. Users are kids, so please use easy and friendly expressions.",
-        # Q3. Attentional Deployment
-        "Based on the previous responses, create a short question what the child like to do. Ensure the language is playful and easy for kids.",
-        # Q4. Cognitive Change – Cognitive Reappraisal
-        "Based on the previous responses, generate a short question that helps the child think about their situation in a more positive light. Suggest that they update what they drew on the canvas in a positive way. Ensure the language is playful and easy for kids.",
-        # Q5. Response Modulation: Reflection
-        "Based on the previous responses, create a short reflection question that helps the child notice any changes in their feelings. For example: 'Let’s talk about your feelings again. How do you feel now compared to when you started this activity?' Ensure the advice provided is directly relevant to the emotions and thoughts shared by the child, using examples or activities that are fun and easy for kids to understand."
+        "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotion as an 'abstract shape or symbol' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
+        "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotions as a 'texture' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
+        "Based on the previous responses, generate a short, easy-to-understand summary for kids. Use friendly language that reflects the emotions they expressed. Then, provide personalized advice to help them reappraise their emotions or practice cognitive defusion, incorporating a playful and engaging approach consistent with ACT theory. Make sure the advice is directly relevant to the emotions and thoughts shared by the child, using examples or activities that are fun and easy for kids to understand. Also, make this less than three sentences."
     ]
     
     user_responses = " ".join([resp for who, resp in session_history if who == 'You'])
@@ -146,7 +147,7 @@ def generate_art_therapy_question(api_key, question_number, session_history):
         response = openai.Completion.create(
             engine="gpt-3.5-turbo-instruct",
             prompt=prompt_text,
-            max_tokens=60,
+            max_tokens=150,
             n=1,
             temperature=0.7
         )
