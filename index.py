@@ -118,8 +118,7 @@ def call_dalle_api(prompt, n=2):
 
 
 predefined_sentences = {
-    3: "Let’s draw and then write down what you think. Use the 'Visual Metaphor' on the right to make changes to your drawing!",
-    4: "Let’s draw and then write down what you think. Use the 'Visual Metaphor' on the right to make changes to your drawing!",
+    4: "Let's use the 'Visual Metaphor' on the right to make changes to your drawing!",
     6: "Thank you for participating in the session. You can restart the session if you want to explore more."
 }
 
@@ -127,14 +126,14 @@ predefined_sentences = {
 def generate_art_therapy_question(api_key, question_number, session_history):
     openai.api_key = api_key
     question_prompts = [
-        # Q1. Situation Selection & Modification
+        # Q1. Identification
         "Generate a short question to ask the child about their current emotions and draw it on the canvas. Follow up with questions like: 'What symbol or shape would represent your feeling?' or 'What kind of texture does your feeling have (e.g., rough, smooth, soft)?' Use friendly and simple language to help kids articulate their experiences.",
-        # Q2. Attentional Deployment
-        "Based on the previous responses, create a short question that encourages the child to think about positive or comforting thoughts, like: 'Can you think of something fun or comforting that makes you feel better when you’re feeling this way?' or 'What’s a happy memory that you can think about right now?' Ensure the language is playful and easy for kids.",
-        # Q3. Cognitive Change – Cognitive Reappraisal_1
-        "Based on the previous responses, generate a short question that helps the child think about their situation in a more positive light. For example: 'Can you think about this situation in a way that makes it feel a little better?' or 'What are some good things you can focus on right now?' Suggest creating a drawing that shows how the situation could look when it feels better. Ensure the language is playful and easy for kids.",
-        # Q4. Cognitive Change – Cognitive Reappraisal_2
-        "Based on the previous responses, generate a short question that encourages the child to consider what they can learn from their experience. For example: 'What do you think you could learn from this situation?' or 'Is there a new way of thinking about this feeling that might help you feel stronger?' Suggest creating a drawing that represents this new perspective. Ensure the language is playful and easy for kids.",
+        # Q2. Situation Selection & Modification
+        "Based on the previous responses, generate a short question that explores the context, such as asking what triggered this emotion or describing the situation or thought that led to these feelings. Users are kids, so please use easy and friendly expressions.",
+        # Q3. Attentional Deployment
+        "Based on the previous responses, create a short question what the child like to do. Ensure the language is playful and easy for kids.",
+        # Q4. Cognitive Change – Cognitive Reappraisal
+        "Based on the previous responses, generate a short question that helps the child think about their situation in a more positive light. Suggest that they update what they drew on the canvas in a positive way. Ensure the language is playful and easy for kids.",
         # Q5. Response Modulation: Reflection
         "Based on the previous responses, create a short reflection question that helps the child notice any changes in their feelings. For example: 'Let’s talk about your feelings again. How do you feel now compared to when you started this activity?' Ensure the advice provided is directly relevant to the emotions and thoughts shared by the child, using examples or activities that are fun and easy for kids to understand."
     ]
