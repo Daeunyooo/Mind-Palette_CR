@@ -276,7 +276,7 @@ def home():
                     input[type="text"] {
                         width: 600px; /* Increased width for larger input box */
                         height: 40px; /* Optional: Set height for a taller input box */
-                        font-size: 16px; /* Increased font size for better readability */
+                        font-size: 18px; /* Increased font size for better readability */
                         padding: 10px; /* Add padding for a better user experience */
                         border: 1px solid #ccc;
                         box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
@@ -619,7 +619,7 @@ def home():
                     <div id="images">
                         <!-- Dynamically added images will go here -->
                     </div>
-                    <div id="reappraisalText" style="padding: 20px; font-size: 16px; color: #333;">
+                    <div id="reappraisalText" style="padding: 20px; font-size: 18px; color: black;">
                         <!-- Reappraisal text will appear here -->
                     </div>
                 </div>
