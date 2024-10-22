@@ -241,6 +241,11 @@ def home():
                     margin-left: 10px;
                     border-radius: 4px; 
                 }
+                .helper-text {
+                    font-size: 18px; /* Set font size to 18px */
+                    line-height: 1.6; /* Adjust line height for better readability */
+                    color: black; /* Ensure the text is in black color */
+                }
                 #question {
                     font-size: 18px; /* Increase the font size for better readability */
                     line-height: 1.6; /* Adjust line height to add more space between lines */
@@ -607,7 +612,10 @@ def home():
                 <div class="right">
                     <h1>Visual Metaphor</h1>
                     <form onsubmit="return generateImage(event);">
-                        <label for="description">I'm here to help you express your emotions. <br> Please describe what you drew on the canvas! <br> </label><br>
+                        <label for="description" class="helper-text">
+                            I'm here to help you express your emotions. <br> 
+                            Please describe what you drew on the canvas! <br>
+                        </label><br>
                         <input type="text" id="description" autocomplete="off" style="width: 400px; padding: 5px; margin-top: 10px;" placeholder="Describe your drawing..." />
                         <input type="submit" value="Generate" class="button-style" />
                     </form>
