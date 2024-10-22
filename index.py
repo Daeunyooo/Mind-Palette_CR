@@ -267,18 +267,21 @@ def home():
                 #images img:hover {
                     cursor: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32"><defs><radialGradient id="grad1" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8" /><stop offset="100%" style="stop-color:rgb(255,255,255);stop-opacity:0.3" /></radialGradient></defs><circle cx="16" cy="16" r="15" fill="url(%23grad1)" stroke="gray" stroke-width="1"/></svg>'), auto;
                 }
-                input[type="text"] {
-                    width: 400px;
-                    padding: 5px;
-                    border: 1px solid #ccc; /* Optional: adds a light border around the input */
-                    box-shadow: 0px 1px 2px rgba(0,0,0,0.1); /* Shadow effect */
-                    border-radius: 4px;
-                    transition: box-shadow 0.3s; /* Smooth transition for shadow on focus */
-                }
-
-                input[type="text"]:focus {
-                    box-shadow: 0px 2px 4px rgba(0,0,0,0.2); border-radius: 4px; /* Darker or larger shadow when input is focused */
-                }
+                    input[type="text"] {
+                        width: 600px; /* Increased width for larger input box */
+                        height: 50px; /* Optional: Set height for a taller input box */
+                        font-size: 18px; /* Increased font size for better readability */
+                        padding: 10px; /* Add padding for a better user experience */
+                        border: 1px solid #ccc;
+                        box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
+                        border-radius: 4px;
+                        transition: box-shadow 0.3s;
+                    }
+                
+                    input[type="text"]:focus {
+                        box-shadow: 0px 2px 4px rgba(0,0,0,0.2); 
+                        border-radius: 4px;
+                    }
                 
                 .canvas-container {
                     display: flex;
