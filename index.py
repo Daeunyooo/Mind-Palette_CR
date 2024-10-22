@@ -619,7 +619,7 @@ def home():
                     <div id="images">
                         <!-- Dynamically added images will go here -->
                     </div>
-                    <div id="reappraisalText" style="padding: 20px; font-size: 18px; color: black;">
+                    <div id="reappraisalText" style="padding: 20px; font-size: 18px; line-height: 1.6; color: black;">
                         <!-- Reappraisal text will appear here -->
                     </div>
                 </div>
