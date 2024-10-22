@@ -269,8 +269,8 @@ def home():
                 }
                     input[type="text"] {
                         width: 600px; /* Increased width for larger input box */
-                        height: 50px; /* Optional: Set height for a taller input box */
-                        font-size: 18px; /* Increased font size for better readability */
+                        height: 40px; /* Optional: Set height for a taller input box */
+                        font-size: 16px; /* Increased font size for better readability */
                         padding: 10px; /* Add padding for a better user experience */
                         border: 1px solid #ccc;
                         box-shadow: 0px 1px 2px rgba(0,0,0,0.1);
