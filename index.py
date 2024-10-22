@@ -242,10 +242,10 @@ def home():
                     border-radius: 4px; 
                 }
                 #question {
-                    font-size: 16px; /* Increase the font size for better readability */
-                    line-height: 1.5; /* Adjust line height to add more space between lines */
+                    font-size: 18px; /* Increase the font size for better readability */
+                    line-height: 1.6; /* Adjust line height to add more space between lines */
                     margin-bottom: 20px; /* Additional margin below the text for spacing */
-                    color: #333; /* Optional: Set a darker color for better visibility */
+                    color: black; 
                 }
                 
                     progress {
