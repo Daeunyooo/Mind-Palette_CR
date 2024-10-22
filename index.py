@@ -136,7 +136,7 @@ def generate_art_therapy_question(api_key, question_number, session_history):
         "Based on the previous responses, generate a short question that explores the context, such as asking what triggered this emotion or describing the situation or thought that led to these feelings. Users are kids, so please use easy and friendly expressions.",
         "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotion as an 'abstract shape or symbol' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
         "Based on the previous responses, generate a short question that asks the user to describe and visualize their emotions as a 'texture' to create their own metaphor for their mind. Users are kids, so please use easy and friendly expressions, and provide some metaphors or examples.",
-        "Based on the previous responses, provide personalized cognitive reappraisal advice to help think about the situation that user described in the previous response in a more positive way. Or, if user's previous response was already positive, please assist user to think about the good things they might learn from this experience. Please incorporating a playful and engaging approach consistent with CBT theory. Make sure the advice is directly relevant to the emotions and thoughts shared by the child, using examples or activities that are fun and easy for kids to understand. Also, make this less than three sentences."
+        "Based on the previous responses, provide personalized cognitive reappraisal advice to help think about the situation that user described in the previous response in a more positive way. Or, if user's previous response was already positive, please assist user to think about the good things they might learn from this experience. Please incorporating a playful and engaging approach consistent with CBT theory. Make sure the advice is directly relevant to the emotions and situations described by the child, using examples or activities that are fun and easy for kids to understand. Also, make this less than three sentences."
     ]
     
     user_responses = " ".join([resp for who, resp in session_history if who == 'You'])
@@ -240,6 +240,12 @@ def home():
                     border: none;
                     margin-left: 10px;
                     border-radius: 4px; 
+                }
+                #question {
+                    font-size: 16px; /* Increase the font size for better readability */
+                    line-height: 1.5; /* Adjust line height to add more space between lines */
+                    margin-bottom: 20px; /* Additional margin below the text for spacing */
+                    color: #333; /* Optional: Set a darker color for better visibility */
                 }
                 
                     progress {
